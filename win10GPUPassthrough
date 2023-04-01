@@ -1,0 +1,27 @@
+#!/bin/bash
+
+sudo dnf update -y
+sudo dnf install -y qemu-kvm libvirt virt-install bridge-utils virt-manager
+
+dmesg | grep -e DMAR -e IOMMU
+
+virt-install \
+--name win10GPU \
+--description "Windows 10 with GPU Passthrough" \
+--ram 8192 \
+--vcpus 8 \
+--disk size=100 \
+--os-type windows \
+--os-variant win10 \
+--cdrom /ISOs/windows10.iso \
+--network bridge=virbr0 \
+--graphics none \
+--console pty,target_type=serial \
+--cpu host \
+--boot uefi \
+--video none \
+--features kvm_hidden=on \
+--host-device=pci_0000:01:00.0 \
+--host-device=pci_0000:01:00.1
+
+virsh start windows10
