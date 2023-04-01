@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Root Check
+if [[ $EUID -ne 0 ]]; then
+   echo "Run as root." 
+   exit 1
+fi
+
+# Variables
+VM_NAME="Win10"
+VM_RAM="8192"
+VM_VCPUS="8"
+VM_DISK_SIZE="50G"
+ISO_IMAGE="/ISOs/win10.iso"
+
+# Machine Deployment
+virt-install \
+--name $VM_NAME \
+--ram $VM_RAM \
+--vcpus $VM_VCPUS \
+--disk size=$VM_DISK_SIZE \
+--os-type windows \
+--os-variant win10 \
+--graphics spice \
+--cdrom $ISO_IMAGE \
+--network network=default,model=virtio \
+--console pty,target_type=serial
+
+# Starting VM
+virsh start $VM_NAME
+
+while true; do
+    if virsh domstate $VM_NAME | grep -q "running"; then
+        break
+    fi
+    sleep 1
+done
+
+# Printing IP
+echo "IP Address of $VM_NAME : $(virsh domifaddr $VM_NAME | grep -oE '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b')"
+
